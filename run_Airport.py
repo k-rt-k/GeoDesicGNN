@@ -140,11 +140,14 @@ def main(params):
         test_res = trainer.test()[0]
         return valid_res, test_res
 
-    hparams = (
-        {"num_layers": [2, 3, 4, 5]}
-        if params.psearch
-        else {"num_layers": [params.num_layers]}
-    )
+    
+    if params.psearch:
+        hparams = {"num_layers": [2, 3, 4, 5],"train_data_set": ["brazil_airport", "europe_airport", "usa_airport"]}
+        if params.gd_type == "VerGD":
+            hparams["gd_deg"] = [True, False]
+    else :
+        hparams = {"num_layers": [params.num_layers]}
+        
 
     best_res = hyperparameter_grid_search(
         hparams,
