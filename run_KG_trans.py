@@ -209,9 +209,7 @@ def main(params):
         return valid_res, test_res
 
     if params.psearch:
-        hparams = {"num_layers": [2, 3, 4, 5],"train_data_set":["fb237_v1","fb237_v2","fb237_v3","fb237_v4", "WN18RR_v1","WN18RR_v2","WN18RR_v3","WN18RR_v4"]}
-        if params.gd_type == "VerGD":
-            hparams["gd_deg"] = [True, False]
+        hparams = {"num_layers": [2, 3, 4, 5],}
     else :
         hparams = {"num_layers": [params.num_layers]}
 
@@ -318,7 +316,21 @@ if __name__ == "__main__":
         default=False,
         help="whether to use geodesic degrees for VerGD",
     )
-
+    parser.add_argument(
+        "--neg_sample",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--val_method",
+        type=str,
+        default="ind",
+    )
+    parser.add_argument(
+        "--num_bases",
+        type=int,
+        default=4,
+    )
     parser.add_argument(
         "--psearch",
         type=bool,
