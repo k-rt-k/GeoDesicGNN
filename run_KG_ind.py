@@ -219,9 +219,7 @@ def main(params):
         return valid_res, test_res
 
     if params.psearch:
-        hparams = {"num_layers": [2, 3, 4, 5],"train_data_set":["fb237_v1_ind","fb237_v2_ind","fb237_v3_ind","fb237_v4_ind", "WN18RR_v1_ind","WN18RR_v2_ind","WN18RR_v3_ind","WN18RR_v4_ind"]}
-        if params.gd_type == "VerGD":
-            hparams["gd_deg"] = [True, False]
+        hparams = {"num_layers": [2, 3, 4, 5]}
     else :
         hparams = {"num_layers": [params.num_layers]}
 
@@ -329,6 +327,22 @@ if __name__ == "__main__":
         type=bool,
         default=False,
         help="perform hyperparameter search",
+    )
+    
+    parser.add_argument(
+        "--neg_sample",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "--val_method", 
+        type=str,
+        default="ind",
+    )
+    parser.add_argument(
+        "--num_bases",
+        type=int,
+        default=4,
     )
     params = parser.parse_args()
     set_random_seed(1)
