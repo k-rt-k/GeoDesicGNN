@@ -22,7 +22,6 @@ def get_data(directory):
     combined_data = {**command_data, **result_data}
     return combined_data
 
-
 def main(root_dir, output_file):
     data_list = []
     for subdir, dirs, files in os.walk(root_dir):
@@ -35,12 +34,15 @@ def main(root_dir, output_file):
         print("No data found.")
         return
 
-    keys = data_list[0].keys()
+    # Dynamically generate fieldnames based on keys in the dictionaries
+    keys = set().union(*(d.keys() for d in data_list))
+    
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         writer.writeheader()
         writer.writerows(data_list)
     print(f"CSV generated successfully at {output_file}")
+
 
 
 if __name__ == "__main__":
