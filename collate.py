@@ -114,7 +114,6 @@ class KGLinkVerBatch:
             p = np.concatenate(d1)
             p = torch.tensor(p, dtype=torch.long)
             self.ls.append(p)
-
     def pin_memory(self):
         for i in range(len(self.ls)):
             self.ls[i] = self.ls[i].pin_memory()
@@ -131,6 +130,8 @@ class KGLinkVerBatch:
         self.tail_gd_len = self.ls[7]
         self.edge_mask = self.ls[8]
         self.bsize = self.ls[9]
+        self.head_gd_deg = torch.Tensor([0])
+        self.tail_gd_deg = torch.Tensor([0])
 
     def to(self, device):
         for i in range(len(self.ls)):
