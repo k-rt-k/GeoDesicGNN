@@ -127,7 +127,7 @@ def main(params):
         return valid_res, test_res
 
     if params.psearch:
-        hparams = {"num_layers": [2, 3, 4, 5],"train_data_set": []}
+        hparams = {"num_layers": [2, 3, 4, 5]}
         if params.gd_type == "VerGD":
             hparams["gd_deg"] = [True, False]
     else :
