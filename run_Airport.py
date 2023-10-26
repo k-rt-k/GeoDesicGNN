@@ -142,9 +142,7 @@ def main(params):
 
     
     if params.psearch:
-        hparams = {"num_layers": [2, 3, 4, 5],"train_data_set": ["brazil_airport", "europe_airport", "usa_airport"]}
-        if params.gd_type == "VerGD":
-            hparams["gd_deg"] = [True, False]
+        hparams = {"num_layers": [2, 3, 4, 5]}
     else :
         hparams = {"num_layers": [params.num_layers]}
         
