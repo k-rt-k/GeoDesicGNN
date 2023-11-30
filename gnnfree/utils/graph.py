@@ -13,7 +13,6 @@ def construct_graph_from_edges(
     edge_type=None,
     num_rels=None,
 ):
-    num_rels = 1
     if inverse_edge:
         head = np.concatenate([ori_head, ori_tail])
         tail = np.concatenate([ori_tail, ori_head])
@@ -29,6 +28,8 @@ def construct_graph_from_edges(
         g.edata["type"] = torch.tensor(
             np.concatenate((edge_type, edge_type + num_rels))
         )
+    else:
+        num_rels = 1
     return g
 
 
