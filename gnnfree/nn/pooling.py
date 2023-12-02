@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import pdb
+from math import sqrt
 from abc import ABCMeta, abstractmethod
 from torch_scatter import scatter
 
@@ -182,19 +183,17 @@ class GDAttnTransform(Transform):
             gd_repr = self.mlp_combine_gd_deg(
                 torch.cat([gd_repr, gd_deg.view(-1, 1)], dim=-1)
             )
-        og_nodes = torch.repeat_interleave(repr,gd_count)
-        attnwts = torch.sum(self.Q(og_nodes)*self.K(gd_repr),dim=1)/torch.sqrt(self.emb_dim)
-        attnwts = F.sigmoid(attnwts)
+        og_nodes = repr[torch.repeat_interleave(gd,gd_count)]
+        attnwts = torch.sum(self.Q(og_nodes)*self.K(gd_repr),dim=1)/sqrt(self.emb_dim)
+        attnwts = torch.sigmoid(attnwts)
         gd_repr = self.V(gd_repr)
         ### embs MUST be in the correct order
         combined_gd_repr = scatter(
-            gd_repr,
+            gd_repr*attnwts.unsqueeze(1),
             count_to_group_index(gd_count),
             dim=0,
-            dim_size=len(gd_len),
-            weight= attnwts,
-            reduce='mean'
-        )
+            dim_size=len(gd_count),
+        )/scatter(attnwts.unsqueeze(1),count_to_group_index(gd_count),dim=0,dim_size=len(gd_count))
         
         combined_repr = self.mlp_combine_nei_gd(
             torch.cat(
@@ -331,7 +330,7 @@ class VerGDAttnTransform(VerGDTransform):
         
         og_nodes = torch.repeat_interleave(repr,gd_len)
         attnwts = torch.sum(self.Q(og_nodes)*self.K(gd_repr),dim=1)/torch.sqrt(self.emb_dim)
-        attnwts = F.sigmoid(attnwts)
+        attnwts = torch.sigmoid(attnwts)
         gd_repr = self.V(gd_repr)
         ### embs MUST be in the correct order
         
