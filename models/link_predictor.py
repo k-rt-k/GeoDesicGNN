@@ -3,6 +3,13 @@ import torch.nn as nn
 
 from gnnfree.nn.models.task_predictor import BaseLinkEncoder
 from gnnfree.nn.pooling import *
+import dgl
+
+
+def get_indices(t1,t2):
+    t1 = t1.unsqueeze(1)
+    t2 = t2.unsqueeze(0)
+    return torch.sum(torch.where((t1==t2).all(dim=2)),torch.arange(t1.shape[0]),dim=1)
 
 
 class GDLinkPredictor(BaseLinkEncoder):
@@ -70,7 +77,6 @@ class GDLinkPredictor(BaseLinkEncoder):
     def get_out_dim(self):
         return self.link_dim
     
-
     def pool_from_link(self, repr, head, tail, input):
         repr_list = []
         embs = self.relemb(input.rel)
@@ -99,23 +105,27 @@ class GDLinkPredictor(BaseLinkEncoder):
                     )
                 )
             elif ft == "HeadVerGDHet":
+                edges = torch.cat([input.head.unsqueeze(1),input.tail.unsqueeze(1)], dim=1)
+                hgd_edges = torch.cat([torch.repeat_interleave(input.head,input.head_gd_len).unsqueeze(1),input.head_gd.unsqueeze(1)],dim=1)
                 repr_list.append(
                     self.feature_module[ft](
                         repr,
                         input.head_gd,
                         input.head_gd_len,
                         input.head_gd_deg,
-                        embs,
+                        embs[get_indices(edges,hgd_edges)],
                     )
                 )
             elif ft == "HeadVerGDDegHet":
+                edges = torch.cat([input.head.unsqueeze(1),input.tail.unsqueeze(1)], dim=1)
+                hgd_edges = torch.cat([torch.repeat_interleave(input.head,input.head_gd_len).unsqueeze(1),input.head_gd.unsqueeze(1)],dim=1)
                 repr_list.append(
                     self.feature_module[ft](
                         repr,
                         input.head_gd,
                         input.head_gd_len,
                         input.head_gd_deg,
-                        embs,
+                        embs[get_indices(edges,hgd_edges)],
                     )
                 )
             elif ft == "TailVerGD":
@@ -134,23 +144,28 @@ class GDLinkPredictor(BaseLinkEncoder):
                     )
                 )
             elif ft == "TailVerGDHet":
+                edges = torch.cat([input.head.unsqueeze(1),input.tail.unsqueeze(1)], dim=1)
+                tgd_edges = torch.cat([input.tail_gd.unsqueeze(1), torch.repeat_interleave(input.tail,input.tail_gd_len).unsqueeze(1)],dim=1)
                 repr_list.append(
                     self.feature_module[ft](
                         repr,
                         input.tail_gd,
                         input.tail_gd_len,
                         input.tail_gd_deg,
-                        embs,
+                        embs[get_indices(edges,tgd_edges)],
                     )
                 )
             elif ft == "TailVerGDDegHet":
+                edges = torch.cat([input.head.unsqueeze(1),input.tail.unsqueeze(1)], dim=1)
+                tgd_edges = torch.cat([input.tail_gd.unsqueeze(1), torch.repeat_interleave(input.tail,input.tail_gd_len).unsqueeze(1)],dim=1)
+                
                 repr_list.append(
                     self.feature_module[ft](
                         repr,
                         input.tail_gd,
                         input.tail_gd_len,
                         input.tail_gd_deg,
-                        embs,
+                        embs[get_indices(edges,tgd_edges)],
                     )
                 )
             elif ft == "HorGD":
