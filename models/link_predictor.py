@@ -64,6 +64,22 @@ class GDLinkPredictor(BaseLinkEncoder):
                 self.feature_module[ft] = VerGDTransform(
                     self.emb_dim, gd_deg=True, heterogeneous=True, rel_type_emb_dim=self.emb_dim
                 )
+            elif ft == 'HeadVerGDAttn':
+                self.feature_module[ft] = VerGDAttnTransform(
+                    self.emb_dim, gd_deg=False
+                )
+            elif ft == "HeadVerGDDegAttn":
+                self.feature_module[ft] = VerGDTransform(
+                    self.emb_dim, gd_deg=True
+                )
+            elif ft == "TailVerGDAttn":
+                self.feature_module[ft] = VerGDAttnTransform(
+                    self.emb_dim, gd_deg=False
+                )
+            elif ft == "TailVerGDDegAttn":
+                self.feature_module[ft] = VerGDAttnTransform(
+                    self.emb_dim, gd_deg=True
+                )
             elif ft == "HorGD":
                 self.feature_module[ft] = ScatterReprTransform(self.emb_dim)
             elif ft == "Rel" and self.num_rels is not None:
@@ -89,13 +105,13 @@ class GDLinkPredictor(BaseLinkEncoder):
                 repr_list.append(self.feature_module[ft](repr, head))
             elif ft == "tail":
                 repr_list.append(self.feature_module[ft](repr, tail))
-            elif ft == "HeadVerGD":
+            elif ft == "HeadVerGD" or ft == "HeadVerGDAttn":
                 repr_list.append(
                     self.feature_module[ft](
                         repr, input.head_gd, input.head_gd_len, None
                     )
                 )
-            elif ft == "HeadVerGDDeg":
+            elif ft == "HeadVerGDDeg" or ft == "HeadVerGDDegAttn":
                 repr_list.append(
                     self.feature_module[ft](
                         repr,
@@ -128,13 +144,13 @@ class GDLinkPredictor(BaseLinkEncoder):
                         embs[get_indices(edges,hgd_edges)],
                     )
                 )
-            elif ft == "TailVerGD":
+            elif ft == "TailVerGD" or ft == "TailVerGDAttn":
                 repr_list.append(
                     self.feature_module[ft](
                         repr, input.tail_gd, input.tail_gd_len, None
                     )
                 )
-            elif ft == "TailVerGDDeg":
+            elif ft == "TailVerGDDeg" or ft == "TailVerGDDegAttn":
                 repr_list.append(
                     self.feature_module[ft](
                         repr,

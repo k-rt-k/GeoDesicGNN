@@ -149,8 +149,8 @@ def main(params):
         params.reach_dist = params.num_layers
         feature_list = ["head", "tail", "dist"]
         if params.gd_type == "VerGD":
-            feature_list.append("HeadVerGD" + ("Deg" if params.gd_deg else ""))
-            feature_list.append("TailVerGD" + ("Deg" if params.gd_deg else ""))
+            feature_list.append("HeadVerGD" + ("Deg" if params.gd_deg else "") + "Attn")
+            feature_list.append("TailVerGD" + ("Deg" if params.gd_deg else "") + "Attn")
         elif params.gd_type == "HorGD":
             feature_list.append("HorGD")
         params.feature_list = feature_list
