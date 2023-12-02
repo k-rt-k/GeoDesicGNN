@@ -35,12 +35,13 @@ class Transform(Extractor):
         return self.emb_dim
 
 
+# Used only for node classfn and graph classfn level pooling
 class GDTransform(Transform):
     """compute node-level GD representation."""
 
     def __init__(self, emb_dim, gd_deg=True, batch_norm=True) -> None:
         super().__init__(emb_dim)
-        self.gd_deg = gd_deg
+        self.gd_deg = gd_deg    
         if gd_deg:
             self.mlp_combine_gd_deg = MLPLayers(
                 2,
@@ -118,6 +119,33 @@ class GDTransform(Transform):
         )
         return node_repr
 
+# class GraphAttentionPooler(Pooler):
+#     def __init__(self, emb_dim, num_heads=1, dropout=0.0):
+#         super().__init__()
+#         self.emb_dim = emb_dim
+#         self.num_heads = num_heads
+#         self.dropout = dropout
+#         self.att = nn.MultiheadAttention(
+#             emb_dim, num_heads, dropout=dropout
+#         )
+#         self.mlp = MLPLayers(2, h_units=[emb_dim, 2 * emb_dim, emb_dim])
+
+#     def forward(self, repr, ind, ind_block):
+#         """Compute graph-level representation.
+
+#         Arguments:
+#             repr {torch.tensor} -- node representations
+#             ind {torch.tensor} -- graph node indices
+#             ind_block {torch.tensor} -- graph node block indices
+
+#         Returns:
+#             torch.tensor -- graph-level representation
+#         """
+#         graph_repr = self.att(
+#             repr[ind].unsqueeze(1), repr[ind_block].unsqueeze(1)
+#         )[0].squeeze(1)
+#         graph_repr = self.mlp(graph_repr)
+#         return graph_repr
 
 class ReprIndexTransform(Transform):
     def forward(self, repr, ind):
@@ -132,7 +160,7 @@ class EmbTransform(Transform):
     def forward(self, ind):
         return self.emb(ind)
 
-
+# corresponds to the HorGD
 class ScatterReprTransform(Transform):
     def __init__(self, emb_dim, scatter_method="sum"):
         super().__init__(emb_dim)
@@ -153,9 +181,15 @@ class ScatterReprTransform(Transform):
 class VerGDTransform(Transform):
     """Vertical GD representation for links"""
 
-    def __init__(self, emb_dim, gd_deg=False) -> None:
+    def __init__(self, emb_dim, gd_deg=False,heterogeneous:bool=False,rel_type_emb_dim:int|None=None) -> None:
         super().__init__(emb_dim)
         self.gd_deg = gd_deg
+        self.heterogeneous = heterogeneous
+        if self.heterogeneous:
+            self.rel_embedder = MLPLayers(
+                3, h_units=[emb_dim+rel_type_emb_dim, 2 * emb_dim, 2*emb_dim, emb_dim]
+            )
+            
         if gd_deg:
             self.mlp_combine_gd_deg = MLPLayers(
                 2, h_units=[emb_dim + 1, 2 * emb_dim, emb_dim]
@@ -164,7 +198,7 @@ class VerGDTransform(Transform):
             2, h_units=[emb_dim, 2 * emb_dim, emb_dim]
         )
 
-    def get_ver_gd_one_side(self, repr, gd, gd_len, gd_deg):
+    def get_ver_gd_one_side(self, repr, gd, gd_len, gd_deg, embs=None):
         """Get vertical geodesics of one side.
 
         Arguments:
@@ -177,6 +211,11 @@ class VerGDTransform(Transform):
         if gd_deg:
             gd_repr = self.mlp_combine_gd_deg(
                 torch.cat([gd_repr, gd_deg.view(-1, 1)], dim=-1)
+            )
+        ### embs MUST be in the correct order
+        if self.heterogeneous:
+            gd_repr = self.rel_embedder(
+                torch.cat([gd_repr, embs], dim=-1)
             )
         gd_repr = scatter(
             gd_repr,
@@ -196,6 +235,31 @@ class VerGDTransform(Transform):
         gd_repr = self.get_ver_gd_one_side(repr, gd, gd_len, gd_deg)
         return self.mlp_gd_process(gd_repr)
 
+def VerGDAttnTransform(VerGDTransform):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        # attn = nn.MultiheadAttention(
+
+    def get_ver_gd_one_side(self, repr, gd, gd_len, gd_deg,embs=None):
+        
+        if gd_deg:
+            gd_repr = self.mlp_combine_gd_deg(
+                torch.cat([gd_repr, gd_deg.view(-1, 1)], dim=-1)
+            )
+        #attnwts = 
+        ### embs MUST be in the correct order
+        if self.heterogeneous:
+            gd_repr = self.rel_embedder(
+                torch.cat([gd_repr, embs], dim=-1)
+            )
+        gd_repr = scatter(
+            gd_repr,
+            count_to_group_index(gd_len),
+            dim=0,
+            dim_size=len(gd_len),
+            weight=attnwts,
+        )
+        return gd_repr
 
 class IdentityTransform(Transform):
     def __init__(self, emb_dim):

@@ -33,6 +33,14 @@ class GDLinkPredictor(BaseLinkEncoder):
                 self.feature_module[ft] = VerGDTransform(
                     self.emb_dim, gd_deg=True
                 )
+            elif ft == 'HeadVerGDHet':
+                self.feature_module[ft] = VerGDTransform(
+                    self.emb_dim, gd_deg=False, heterogeneous=True, rel_type_emb_dim=self.emb_dim
+                )
+            elif ft == 'HeadVerGDDegHet':
+                self.feature_module[ft] = VerGDTransform(
+                    self.emb_dim, gd_deg=True, heterogeneous=True, rel_type_emb_dim=self.emb_dim
+                )
             elif ft == "TailVerGD":
                 self.feature_module[ft] = VerGDTransform(
                     self.emb_dim, gd_deg=False
@@ -41,10 +49,18 @@ class GDLinkPredictor(BaseLinkEncoder):
                 self.feature_module[ft] = VerGDTransform(
                     self.emb_dim, gd_deg=True
                 )
+            elif ft == 'TailVerGDHet':
+                self.feature_module[ft] = VerGDTransform(
+                    self.emb_dim, gd_deg=False, heterogeneous=True, rel_type_emb_dim=self.emb_dim
+                )
+            elif ft == 'TailVerGDDegHet':
+                self.feature_module[ft] = VerGDTransform(
+                    self.emb_dim, gd_deg=True, heterogeneous=True, rel_type_emb_dim=self.emb_dim
+                )
             elif ft == "HorGD":
                 self.feature_module[ft] = ScatterReprTransform(self.emb_dim)
             elif ft == "Rel" and self.num_rels is not None:
-                self.feature_module[ft] = EmbTransform(
+                self.relemb = self.feature_module[ft] = EmbTransform(
                     self.emb_dim, self.num_rels
                 )
             else:
@@ -53,9 +69,11 @@ class GDLinkPredictor(BaseLinkEncoder):
 
     def get_out_dim(self):
         return self.link_dim
+    
 
     def pool_from_link(self, repr, head, tail, input):
         repr_list = []
+        embs = self.relemb(input.rel)
         for ft in self.feature_list:
             if ft == "":
                 continue
@@ -80,6 +98,26 @@ class GDLinkPredictor(BaseLinkEncoder):
                         input.head_gd_deg,
                     )
                 )
+            elif ft == "HeadVerGDHet":
+                repr_list.append(
+                    self.feature_module[ft](
+                        repr,
+                        input.head_gd,
+                        input.head_gd_len,
+                        input.head_gd_deg,
+                        embs,
+                    )
+                )
+            elif ft == "HeadVerGDDegHet":
+                repr_list.append(
+                    self.feature_module[ft](
+                        repr,
+                        input.head_gd,
+                        input.head_gd_len,
+                        input.head_gd_deg,
+                        embs,
+                    )
+                )
             elif ft == "TailVerGD":
                 repr_list.append(
                     self.feature_module[ft](
@@ -95,11 +133,31 @@ class GDLinkPredictor(BaseLinkEncoder):
                         input.tail_gd_deg,
                     )
                 )
+            elif ft == "TailVerGDHet":
+                repr_list.append(
+                    self.feature_module[ft](
+                        repr,
+                        input.tail_gd,
+                        input.tail_gd_len,
+                        input.tail_gd_deg,
+                        embs,
+                    )
+                )
+            elif ft == "TailVerGDDegHet":
+                repr_list.append(
+                    self.feature_module[ft](
+                        repr,
+                        input.tail_gd,
+                        input.tail_gd_len,
+                        input.tail_gd_deg,
+                        embs,
+                    )
+                )
             elif ft == "HorGD":
                 repr_list.append(
                     self.feature_module[ft](repr, input.gd, input.gd_len)
                 )
             elif ft == "Rel" and self.num_rels is not None:
-                repr_list.append(self.feature_module[ft](input.rel))
+                repr_list.append(embs)
         g_rep = torch.cat(repr_list, dim=1)
         return g_rep
