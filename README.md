@@ -1,12 +1,11 @@
 # Geodesic Graph Neural Network for Efficient Graph Representation Learning
 
-This is the official codebase of the paper
+CS 768 Learning with Graphs project. Harsh Poonia (210050063) and Kartik Nair (210050083)
 
-[Geodesic Graph Neural Network for Efficient Graph Representation Learning](https://arxiv.org/abs/2210.02636)
+1. First Checkpoint Presentation - slides [here](https://docs.google.com/presentation/d/1BJGQ3L3FJOUIr1rvl-3YU9ci1oHyK-DqjT34xNfdFs4/edit?usp=sharing). An introduction to the paper, understanding the methods and architecture employed
+2. Second Checkpoint Presentation - slides [here](https://docs.google.com/presentation/d/1hgPYwDda8gny4fnEI5Ffr8DmbC_SHBzTotOL0CXjs6E/edit?usp=sharing). Reproducibility study on the paper, and our results, contrasted with those obtained by the authors. Our analysis of our obtained results
+3. Final Presentation - slides [here](https://docs.google.com/presentation/d/1WHMwS0_NyacciubnpBLKZ11bTeP3d6EsMQ16YSymtMs/edit?usp=sharing). Our modifications to the code, to implement the extensions we proposed in the first presentation. Results obtained from these, and our analyses thereof.
 
-Lecheng Kong, Yixin Chen, Muhan Zhang
-
-The package is developed based on the GNN toolbox gnnfree.
 
 ## Installation
 
