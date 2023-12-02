@@ -181,7 +181,7 @@ class ScatterReprTransform(Transform):
 class VerGDTransform(Transform):
     """Vertical GD representation for links"""
 
-    def __init__(self, emb_dim, gd_deg=False,heterogeneous:bool=False,rel_type_emb_dim:int|None=None) -> None:
+    def __init__(self, emb_dim, gd_deg=False,heterogeneous:bool=False,rel_type_emb_dim=None) -> None:
         super().__init__(emb_dim)
         self.gd_deg = gd_deg
         self.heterogeneous = heterogeneous
@@ -231,8 +231,9 @@ class VerGDTransform(Transform):
         gd,
         gd_len,
         gd_deg=None,
+        embs=None
     ):
-        gd_repr = self.get_ver_gd_one_side(repr, gd, gd_len, gd_deg)
+        gd_repr = self.get_ver_gd_one_side(repr, gd, gd_len, gd_deg,embs)
         return self.mlp_gd_process(gd_repr)
 
 def VerGDAttnTransform(VerGDTransform):

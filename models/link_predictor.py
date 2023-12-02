@@ -1,14 +1,13 @@
 import torch
 import torch.nn as nn
-
 from gnnfree.nn.models.task_predictor import BaseLinkEncoder
 from gnnfree.nn.pooling import *
 import dgl
 
 
 def get_indices(t1,t2):
-    t1 = t1.unsqueeze(1)
-    t2 = t2.unsqueeze(0)
+    t1 = t1.unsqueeze(0)
+    t2 = t2.unsqueeze(1)
     #print(t1.shape,t2.shape)
     return torch.sum(torch.where((t1==t2).all(dim=2),torch.arange(t1.shape[0],device=t1.device),0),dim=1)
 
