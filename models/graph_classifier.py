@@ -1,7 +1,7 @@
 import torch
 import dgl
 
-from gnnfree.nn.pooling import GDTransform
+from gnnfree.nn.pooling import GDTransform, GDAttnTransform
 from gnnfree.nn.models.task_predictor import BaseGraphEncoder
 
 

@@ -182,26 +182,20 @@ class GDAttnTransform(Transform):
             gd_repr = self.mlp_combine_gd_deg(
                 torch.cat([gd_repr, gd_deg.view(-1, 1)], dim=-1)
             )
-        og_nodes = torch.repeat_interleave(repr,gd_len)
+        og_nodes = torch.repeat_interleave(repr,gd_count)
         attnwts = torch.sum(self.Q(og_nodes)*self.K(gd_repr),dim=1)/torch.sqrt(self.emb_dim)
         attnwts = F.sigmoid(attnwts)
         gd_repr = self.V(gd_repr)
         ### embs MUST be in the correct order
         combined_gd_repr = scatter(
             gd_repr,
-            count_to_group_index(gd_len),
+            count_to_group_index(gd_count),
             dim=0,
             dim_size=len(gd_len),
             weight= attnwts,
             reduce='mean'
         )
         
-        combined_gd_repr = scatter(
-            combined_gd_repr,
-            count_to_group_index(gd_count),
-            dim=0,
-            dim_size=len(gd_count),
-        )
         combined_repr = self.mlp_combine_nei_gd(
             torch.cat(
                 [combined_gd_repr, neighbors_repr, dist.view(-1, 1)], dim=-1
