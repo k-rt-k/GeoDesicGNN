@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from abc import ABCMeta, abstractmethod
 from torch_scatter import scatter
@@ -186,6 +187,8 @@ class VerGDTransform(Transform):
         self.gd_deg = gd_deg
         self.heterogeneous = heterogeneous
         if self.heterogeneous:
+            if rel_type_emb_dim is None:
+                rel_type_emb_dim = emb_dim
             self.rel_embedder = MLPLayers(
                 3, h_units=[emb_dim+rel_type_emb_dim, 2 * emb_dim, 2*emb_dim, emb_dim]
             )
@@ -236,31 +239,47 @@ class VerGDTransform(Transform):
         gd_repr = self.get_ver_gd_one_side(repr, gd, gd_len, gd_deg,embs)
         return self.mlp_gd_process(gd_repr)
 
-def VerGDAttnTransform(VerGDTransform):
+class VerGDAttnTransform(VerGDTransform):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        # attn = nn.MultiheadAttention(
+        
+        ## one attention like mechanism, like qkv
+        self.Q = nn.Linear(self.emb_dim,self.emb_dim)
+        self.K = nn.Linear(self.emb_dim,self.emb_dim)
+        self.V = nn.Linear(self.emb_dim,self.emb_dim)
+
 
     def get_ver_gd_one_side(self, repr, gd, gd_len, gd_deg,embs=None):
+        
+        
+        gd_repr = repr[gd]
         
         if gd_deg:
             gd_repr = self.mlp_combine_gd_deg(
                 torch.cat([gd_repr, gd_deg.view(-1, 1)], dim=-1)
             )
-        #attnwts = 
-        ### embs MUST be in the correct order
+            
         if self.heterogeneous:
             gd_repr = self.rel_embedder(
                 torch.cat([gd_repr, embs], dim=-1)
             )
+        
+        og_nodes = torch.repeat_interleave(repr,gd_len)
+        attnwts = torch.sum(self.Q(og_nodes)*self.K(gd_repr),dim=1)/torch.sqrt(self.emb_dim)
+        attnwts = F.sigmoid(attnwts)
+        gd_repr = self.V(gd_repr)
+        ### embs MUST be in the correct order
+        
         gd_repr = scatter(
-            gd_repr,
+            attnwts,
             count_to_group_index(gd_len),
             dim=0,
             dim_size=len(gd_len),
-            weight=attnwts,
+            weight=gd_repr,
+            reduce='mean'
         )
         return gd_repr
+    
 
 class IdentityTransform(Transform):
     def __init__(self, emb_dim):
